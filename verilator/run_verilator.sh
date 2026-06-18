@@ -56,6 +56,7 @@ run_cmd() {
 
 build_verilator() {
     run_cmd "echo [INFO][Verilator] Build Verilator"
+    # TODO why timescale errors?
     run_cmd "verilator \
         -Wno-fatal \
         -Wno-style \
@@ -64,6 +65,7 @@ build_verilator() {
         -Wno-WIDTHTRUNC \
         -Wno-WIDTHCONCAT \
         -Wno-ASCRANGE \
+        -Wno-TIMESCALEMOD \
         --binary \
         -j 0 \
         --timing \
@@ -145,6 +147,13 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --run)
+
+            # Compile remotely so I don't have to install toolchain
+            scp -s ../sw/helloworld.c vlsi2:/home/vlsi2_37fs26/quick/vlsi2_croc/sw/helloworld.c
+            ssh vlsi2 "cd /home/vlsi2_37fs26/quick/vlsi2_croc/sw && oseda -2025.12 make"
+            scp -s vlsi2:/home/vlsi2_37fs26/quick/vlsi2_croc/sw/bin/helloworld.hex ../sw/bin/helloworld.hex
+            scp -s vlsi2:/home/vlsi2_37fs26/quick/vlsi2_croc/sw/bin/helloworld.elf ../sw/bin/helloworld.elf
+
             run_binary $2
             shift 2
             ;;

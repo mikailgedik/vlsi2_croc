@@ -9,9 +9,9 @@
 `define TRACE_WAVE
 
 module tb_croc_soc #(
-  parameter int unsigned GpioCount = 32
+  parameter int unsigned GpioCount = 26
 );
-
+  import socc_on_croc_utils_pkg::DelayImpl; 
   import tb_croc_pkg::*;
 
   // Signals fully controlled by the VIP
@@ -33,6 +33,9 @@ module tb_croc_soc #(
   logic [GpioCount-1:0] gpio_in;
   logic [GpioCount-1:0] gpio_out;
   logic [GpioCount-1:0] gpio_out_en;
+
+  logic vga_hsync_o, vga_vsync_o;
+  logic [15:0] vga_color_o;
 
   // Signals controlled by the testbench
 
@@ -109,7 +112,11 @@ module tb_croc_soc #(
     .uart_tx_o     ( uart_tx     ),
     .gpio_i        ( gpio_in     ),
     .gpio_o        ( gpio_out    ),
-    .gpio_out_en_o ( gpio_out_en )
+    .gpio_out_en_o ( gpio_out_en ),
+
+    .vga_hsync_o(vga_hsync_o),
+    .vga_vsync_o(vga_vsync_o),
+    .vga_color_o(vga_color_o)
   );
 
   /////////////////
@@ -150,6 +157,16 @@ module tb_croc_soc #(
     // finish simulation
     repeat(50) @(posedge sys_clk);
     $finish();
+  end
+
+  initial begin
+    int i;
+    i = 0;
+    while(1) begin
+      DelayImpl#(.T_CLK(2 * ClkPeriodSys))::capture_image($sformatf("./output-%03d.bmp", i), vga_color_o, vga_hsync_o, vga_vsync_o);
+      i++;
+      $display("@%t | [VGA] One frame", $time);
+    end
   end
 
   ////////////////
